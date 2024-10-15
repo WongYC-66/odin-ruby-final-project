@@ -52,6 +52,24 @@ class Board
     puts "    A   B   C   D   E   F   G   H  "
   end
 
+  def place_piece(from, to, player)
+    return false if whose_piece?(from[0], from[1]) != player.color
+    return false if !valid_move?(from, to)
+    # Replace and remove old
+    r1, c1 = from
+    r2, c2 = to
+    @board[r2][c2] = @board[r1][c1]
+    @board[r1][c1] = nil
+    check_pawn_move_rules(from, to)
+    @board[r2][c2].updated_moved()
+    return true
+  end
+
+  def whose_piece?(r, c) # return "B" or "W"
+    piece = @board[r][c]
+    return piece ? @board[r][c].color : nil
+  end
+
   def valid_move?(from, to)
     return can_take?(from, to) || can_move?(from, to)
   end
@@ -66,7 +84,8 @@ class Board
     return false if source_piece.color == target_piece.color # cant take own piece
     # from,to both not empty
     takeable_pos = find_reachable_pos(from, to, source_piece.take_type, include_first_piece: true)
-    return takeable_pos.include? (to)
+    p takeable_pos
+    return takeable_pos.include?(to)
   end
 
   def can_move?(from, to)
@@ -78,14 +97,18 @@ class Board
     return false if target_piece  # to_pos has a piece, can't move
     # from,to both not empty
     moveable_pos = find_reachable_pos(from, to, source_piece.move_type, include_first_piece: false)
-    return moveable_pos.include? (to)
+    p moveable_pos
+    return moveable_pos.include?(to)
   end
 
   def find_reachable_pos(from, to, type_arr, include_first_piece)
     reachable_pos = []
+    p type_arr
     type_arr.each do |type|
       reachable_pos += find_one_step_vertical_up_pos(from) if type == 'one-step-vertical-up'
+      reachable_pos += find_two_step_vertical_up_pos(from) if type == 'two-step-vertical-up'
       reachable_pos += find_one_step_vertical_down_pos(from) if type == 'one-step-vertical-down'
+      reachable_pos += find_two_step_vertical_down_pos(from) if type == 'two-step-vertical-down'
       reachable_pos += find_one_step_diagonal_up_pos(from) if type == 'one-step-diagonal-up'
       reachable_pos += find_one_step_diagonal_down_pos(from) if type == 'one-step-diagonal-down'
       reachable_pos += find_one_step_cross_pos(from) if type == 'one-step-cross'
@@ -103,7 +126,11 @@ class Board
       dr, dc = opt
       new_r = from[0] + dr
       new_c = from[1] + dc
-      return [new_r, new_c] if valid_loc?(new_r, new_c)
+      if valid_loc?(new_r, new_c)
+        [new_r, new_c] 
+      else
+        nil
+      end
     end 
   end
 
@@ -116,8 +143,18 @@ class Board
     verify_options(options, from)
   end
 
+  def find_two_step_vertical_up_pos(from)
+    options = [[-2, 0]]  #up, #pawn
+    verify_options(options, from)
+  end
+
   def find_one_step_vertical_down_pos(from)
     options = [[+1, 0]]  #down, #pawn
+    verify_options(options, from)
+  end
+
+  def find_two_step_vertical_down_pos(from)
+    options = [[+2, 0]]  #down, #pawn
     verify_options(options, from)
   end
 
@@ -193,4 +230,66 @@ class Board
     return [false, nil] if remain_kings.length != 1   # return false when more than 2 kings
     return [true, remain_kings[0].color]              # return true and color of remaining winning king
   end
+
+  def check_pawn_move_rules(from, to)
+    r1, _ = from
+    r2, c2 = to
+    piece = @board[r2][c2] 
+    
+    if piece.type == 'Pawn'
+      #1. if pawn ever moved, always disabled double-step
+      piece.disable_double_step  
+
+      # 2. if is diagonally and en_passant applies
+      check_kill_the_en_passant_pawn(piece, r2, c2)
+    end
+      
+    # 3. if no en_passant killing, then reset all en_passant rules bcoz miss it 
+    reset_pawn_en_passant_killable()
+
+    if piece.type == "Pawn"
+      # 4. if double_stepped, then gives opposite pawn at 'left' and 'right' the ability to en-passant
+      give_opposite_pawn_en_passant(piece, r2, c2) if (r2 - r1).abs == 2 # double-step
+    end
+  end
+
+  def give_opposite_pawn_en_passant(piece, r, c)
+    opposite_pawns = []
+    opposite_pawns.push(@board[r][c + 1]) if c < MAX_COL
+    opposite_pawns.push(@board[r][c - 1]) if c > MIN_COL
+    opposite_pawns.each do |oppo_piece|
+      next if !oppo_piece
+      next if oppo_piece.type != 'Pawn' 
+      next if oppo_piece.color == piece.color 
+      oppo_piece.add_en_passant(piece)
+    end
+  end
+
+  def check_kill_the_en_passant_pawn(piece, r, c)
+    return if !piece.killable_pawn_by_en_passant
+    top_piece = @board[r - 1][c] if r > MIN_ROW
+    bottom_piece = @board[r + 1][c] if r < MAX_ROW
+    remove_from_board(top_piece) if piece.killable_pawn_by_en_passant == top_piece
+    remove_from_board(bottom_piece) if piece.killable_pawn_by_en_passant == bottom_piece
+  end
+
+  def remove_from_board(piece_to_remove)
+    @board.each_with_index do |row, r|
+      row.each_with_index do |piece, c|
+        @board[r][c] = nil if piece == piece_to_remove
+      end
+    end
+  end
+
+  def reset_pawn_en_passant_killable()
+    @board.each_with_index do |row, r|
+      row.each_with_index do |piece, c|
+        next if !piece
+        next if piece.type != 'Pawn'
+        piece.delete_en_passant()
+      end
+    end
+  end
+
+
 end

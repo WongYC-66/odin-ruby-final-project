@@ -1,11 +1,17 @@
 class Piece
   attr_reader(:color, :type, :move_type, :take_type)
+  attr
   def initialize(color)
     @color = color  # W or B
+    @moved = false
   end
 
-  def to_s()
+  def to_s
     @symbol
+  end
+
+  def updated_moved
+    @moved = true
   end
 end
 
@@ -60,12 +66,31 @@ class King < Piece
 end
 
 class Pawn < Piece
+  attr_reader(:killable_pawn_by_en_passant)
   def initialize(color)
     super
     @symbol = color == 'W' ? "♙" : "♟"
     @type = "Pawn"
-    @move_type = color == 'W' ? ["one-step-vertical-up"] : ["one-step-vertical-down"] 
+    @move_type = color == 'W' ? ["one-step-vertical-up", "two-step-vertical-up"] : ["one-step-vertical-down", "two-step-vertical-down"] 
     @take_type = color == 'W' ? ["one-step-diagonal-up"] : ["one-step-diagonal-down"] 
+    @killable_pawn_by_en_passant = nil
+  end
+
+  def disable_double_step
+    @move_type.delete("two-step-vertical-up")
+    @move_type.delete("two-step-vertical-down")
+  end
+
+  def add_en_passant(killable_pawn)
+    @killable_pawn_by_en_passant = killable_pawn
+    @move_type.push("one-step-diagonal-up") if @color == "W"
+    @move_type.push("one-step-diagonal-down") if @color != "W"
+  end
+
+  def delete_en_passant()
+    @killable_pawn_by_en_passant = nil
+    @move_type.delete("one-step-diagonal-up")
+    @move_type.delete("one-step-diagonal-down")
   end
 end
 
