@@ -1,6 +1,5 @@
 class Piece
-  attr_reader(:color, :type, :move_type, :take_type)
-  attr
+  attr_reader(:color, :type, :move_type, :take_type, :moved)
   def initialize(color)
     @color = color  # W or B
     @moved = false

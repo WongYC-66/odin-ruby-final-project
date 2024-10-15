@@ -83,7 +83,7 @@ class Board
     return false if target_piece == nil
     return false if source_piece.color == target_piece.color # cant take own piece
     # from,to both not empty
-    takeable_pos = find_reachable_pos(from, to, source_piece.take_type, include_first_piece: true)
+    takeable_pos = find_reachable_pos(from, source_piece.take_type, include_first_piece: true)
     p takeable_pos
     return takeable_pos.include?(to)
   end
@@ -96,12 +96,12 @@ class Board
     return false if source_piece == nil
     return false if target_piece  # to_pos has a piece, can't move
     # from,to both not empty
-    moveable_pos = find_reachable_pos(from, to, source_piece.move_type, include_first_piece: false)
+    moveable_pos = find_reachable_pos(from, source_piece.move_type, include_first_piece: false)
     p moveable_pos
     return moveable_pos.include?(to)
   end
 
-  def find_reachable_pos(from, to, type_arr, include_first_piece)
+  def find_reachable_pos(from, type_arr, include_first_piece)
     reachable_pos = []
     p type_arr
     type_arr.each do |type|
@@ -291,5 +291,76 @@ class Board
     end
   end
 
+  def castling(loc, player)
+    r, c = loc
+    return false if whose_piece?(r, c) != player.color
+
+    rook_piece = @board[r][c]
+    return false if rook_piece.moved
+
+    r_king, c_king, king_piece = get_player_king_piece(player)
+    return false if king_piece.moved
+
+    castling_path = generate_path(r, c, r_king, c_king)
+    pieces_between_path = castling_path.filter_map { |loc| loc ? @board[loc[0]][loc[1]] : false}
+    return false if pieces_between_path.length != 2
+
+    opposite_attacking_loc = generate_opposite_attacking_loc(player)
+    is_castling_path_under_attack = Set.new(opposite_attacking_loc).intersect?(Set.new(castling_path))
+
+    if(is_castling_path_under_attack)
+      return false
+    else
+      # move king and move rook
+      if c < c_king
+        # rook at left of king originally
+        @board[r][c_king - 1] = rook_piece
+        @board[r][c_king - 2] = king_piece
+      else
+        # rook at right of king originally
+        @board[r][c_king + 1] = rook_piece
+        @board[r][c_king + 2] = king_piece
+      end
+      @board[r][c] = nil
+      @board[r][c_king] = nil
+      return true
+    end
+  end
+
+  def get_player_king_piece(player)
+    @board.each_with_index do |row, r|
+      row.each_with_index do |piece, c|
+        next if !piece
+        return [r, c, piece] if piece.type == 'King' && piece.color == player.color
+      end
+    end
+  end
+
+  def generate_path(r1, c1, r2, c2)
+    return [] if r1 != r2
+    res = []
+    for c in c1..c2
+      res.push([r1, c])
+    end
+    res
+  end
+
+  def generate_opposite_attacking_loc(player)
+    # find all pieces not owned by player
+    opposite_pieces = []
+    @board.each_with_index do |row, r|
+      row.each_with_index do |piece, c|
+        next if !piece
+        opposite_pieces.push([[r, c], piece]) if whose_piece?(r, c) != player.color
+      end
+    end
+
+    danger_loc = []   
+    opposite_pieces.map do |loc, piece|
+      danger_loc += find_reachable_pos(loc, piece.take_type, include_first_piece: true)
+    end
+
+    return danger_loc
+  end
 
 end

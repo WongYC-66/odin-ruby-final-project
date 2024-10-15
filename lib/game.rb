@@ -3,6 +3,9 @@ require_relative "board"
 require_relative "player"
 
 class Game
+
+  CHESS_LOC_REGEX = /^[a-hA-H][1-8]$/
+
   def initialize(board = Board.new, turn = true, player1 = Player.new("Player_1", "W"), player2 = Player.new("Player_2", "B"))
     @board = board
     @turn = turn  # true = White(bottom side) starts first
@@ -13,22 +16,39 @@ class Game
   def play
     until @board.game_over?[0]
       @board.print_board()
-      user_input = get_user_input() # [[1,0], [2,0]] or "save" or "q" or "Q"
+      user_input = get_user_input() # [[1,0], [2,0]] or "save" or "q" or "Q" or "castling"
+
+      # option 1. save game
       if user_input == "save"
         save_game()
         next
       end
+      # option 2. quit game
       if user_input == "q"
         exit
       end
-      # valid input, 
+
+      # option 3. do king-rook castling
+      if user_input == "castling"
+        rook_input = get_user_input_for_rook()
+        next if rook_input == 'r' # reset option
+        castling_res = @board.castling(translate(rook_input), get_curr_player)
+        if castling_res
+          puts "Success : Castling done."
+        else
+          puts "Error : castling failed, either u've moved King/Rook, or the path is under attack..." if !place_res
+        end
+        next
+      end
+
+      # option 4. place piece
       from, to = translate(user_input)
       place_res = @board.place_piece(from, to, get_curr_player())
 
       if place_res
         @turn = !@turn
       else
-        puts "Invalid placement..."
+        puts "Error : Invalid placement..."
       end
     end
     # ended
@@ -41,26 +61,39 @@ class Game
     to = nil
     input = nil
     curr_player = get_curr_player()
-    chess_loc_regex = /^[a-hA-H][1-8]$/
 
-    puts "#{curr_player.name}'s turn. You can save game by 'save' or quit by 'q'"
+    puts "#{curr_player.name}'s turn. You can enter:"
+    puts "   save     - to save game"
+    puts "   q        - to quit game"
+    puts "   castling - to do casling" 
 
-    until((from && to) || input == 'save' || input == 'q')
+    until((from && to) || input == 'save' || input == 'q' || input == 'castling')
       if from == nil
         puts "Please enter which piece u pick to move ? e.g. A2"
         input = gets().chomp.downcase
-        from = input if chess_loc_regex.match?(input)
+        from = input if CHESS_LOC_REGEX.match?(input)
       else
         puts "from : #{from}"
-        puts "Please location to place ? e.g. A3 or 'r' to repick the piece"
+        puts "Please enter location to place ? e.g. A3 or 'r' to repick the piece"
         input = gets().chomp.downcase
         from = nil if input == "r"
-        to = input if chess_loc_regex.match?(input)
+        to = input if CHESS_LOC_REGEX.match?(input)
       end
     end
 
     return input if input == 'save' || input == 'q'
     return [from, to]
+  end
+
+  def get_user_input_for_rook
+    input = nil
+
+    until(CHESS_LOC_REGEX.match?(input) || input == 'r')
+      puts "Which Rook u wanna castling with ? Enter r to cancel"
+      input = gets().chomp.downcase
+    end
+
+    return input
   end
 
   def get_curr_player
