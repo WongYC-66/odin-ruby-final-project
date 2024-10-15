@@ -1,3 +1,4 @@
+require 'yaml'
 require_relative "board"
 require_relative "player"
 
@@ -77,13 +78,23 @@ class Game
   end
 
   def save_game
-    # "todo"
-    p "todo"
+    yaml_string = YAML.dump({
+      :board => @board,
+      :turn => @turn,
+      :player1 => @player1,
+      :player2 => @player2,
+    })
+    File.write('./saved/save.yaml', yaml_string)
+    puts "######### Game saved #########"
   end
 
-  def load_game
-    # "todo"
-    p "todo"
+  def self.load_saved
+    p "loading saved game ...."
+    data = YAML.load_file(
+      "./saved/save.yaml",
+      permitted_classes: [Symbol, Piece, Board, Rook, Knight, Bishop, Queen, King, Pawn, Player]
+    )
+    self.new(data[:board], data[:turn], data[:player1], data[:player2])
   end
 
   def print_end_game_status
