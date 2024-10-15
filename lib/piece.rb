@@ -1,5 +1,5 @@
 class Piece
-  attr_reader(:color)
+  attr_reader(:color, :type, :move_type, :take_type)
   def initialize(color)
     @color = color  # W or B
   end
@@ -54,8 +54,8 @@ class King < Piece
     super
     @symbol = color == 'W' ? "♔" : "♚"
     @type = "King"
-    @move_type = ["one-step-vertical", "one-step-horizontal", "one-step-diagonal"]
-    @take_type = ["one-step-vertical", "one-step-horizontal", "one-step-diagonal"]
+    @move_type = ["one-step-cross", "one-step-diagonal"]
+    @take_type = ["one-step-cross", "one-step-diagonal"]
   end
 end
 
@@ -64,8 +64,8 @@ class Pawn < Piece
     super
     @symbol = color == 'W' ? "♙" : "♟"
     @type = "Pawn"
-    @move_type = ["one-step-vertical"]
-    @take_type = ["one-step-diagonal"]
+    @move_type = color == 'W' ? ["one-step-vertical-up"] : ["one-step-vertical-down"] 
+    @take_type = color == 'W' ? ["one-step-diagonal-up"] : ["one-step-diagonal-down"] 
   end
 end
 
