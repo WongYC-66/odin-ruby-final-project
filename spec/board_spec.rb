@@ -245,7 +245,45 @@ describe Board do
   end
 
   describe "#game_over?" do
-    #todo later
+    # will test the individual fn separately
+    # only test the magic logics, mocks the unimportant
+    let(:copied_board) {}
+    before do
+      allow(dummy_piece_W1).to receive(:take_type)
+      allow(dummy_piece_B1).to receive(:take_type)
+    end
+    context("when player1 king is check-mated") do
+      it("return [true, 'B']") do
+        # mock P1 to lose
+        allow(test_board).to receive(:get_all_pieces_by_player).and_return([[[0,0], dummy_piece_W1]], [[[0,7], dummy_piece_B1]])
+        allow(test_board).to receive(:find_reachable_pos).and_return([[0,0], [1,0], [2,0]])
+        allow(test_board).to receive(:clone_board).and_return(copied_board)
+        allow(copied_board).to receive(:own_king_checked_after_placed?).and_return(true, true, true)
+        expect(test_board.game_over?(player1, player2)).to eql([true, 'B'])
+      end
+    end
+
+    context("when player2 king is check-mated") do
+      it("return [true, 'A']") do
+        # mock P2 to lose
+        allow(test_board).to receive(:get_all_pieces_by_player).and_return([[[0,0], dummy_piece_W1]], [[[0,7], dummy_piece_B1]])
+        allow(test_board).to receive(:find_reachable_pos).and_return([[0,0], [1,0], [2,0]])
+        allow(test_board).to receive(:clone_board).and_return(copied_board)
+        allow(copied_board).to receive(:own_king_checked_after_placed?).and_return(false, false, false, true, true, true)
+        expect(test_board.game_over?(player1, player2)).to eql([true, 'W'])
+      end
+    end
+
+    context("nobody is checkmate") do
+      it("return [false, nil]") do
+        # mock P2 to lose
+        allow(test_board).to receive(:get_all_pieces_by_player).and_return([[[0,0], dummy_piece_W1]], [[[0,7], dummy_piece_B1]])
+        allow(test_board).to receive(:find_reachable_pos).and_return([[0,0], [1,0], [2,0]])
+        allow(test_board).to receive(:clone_board).and_return(copied_board)
+        allow(copied_board).to receive(:own_king_checked_after_placed?).and_return(false, true, false)
+        expect(test_board.game_over?(player1, player2)).to eql([false, nil])
+      end
+    end
   end
 
   describe "#check_pawn_move_rules" do
@@ -568,10 +606,82 @@ describe Board do
     # no needa test, built-in, test each fn individually
   end
 
+  describe "#get_all_pieces_by_player" do
+    context("when called to get player1") do
+      it("returns all piece of player1") do
+        pieces = test_board.get_all_pieces_by_player(player1, false)
+        expect(pieces.length).to eql(16)
+        expect(pieces.all? {|_, piece| piece.color == player1.color}).to eql(true)
+      end
+    end
+    context("when called to get opposite of player1") do
+      it("returns all piece of player2") do
+        pieces = test_board.get_all_pieces_by_player(player1, true)
+        expect(pieces.length).to eql(16)
+        expect(pieces.all? {|_, piece| piece.color != player1.color}).to eql(true)
+      end
+    end
+  end
+
+  describe "#own_king_checked_after_placed?" do
+    # no needa test, but test individual fn
+  end
+
+  describe "#clone_board" do
+    context("when triggers") do
+      it("return a deep copy of board") do
+        copy_board = test_board.clone_board
+        expect(copy_board.board.flatten.length).to eql(test_board.board.flatten.length)
+        expect(copy_board.board).to_not equal(test_board.board)
+        copy_board.board.each_with_index do |row, r|
+          expect(test_board.board[r]).to eql(row)  
+          expect(test_board.board[r]).to_not equal(row)  
+        end
+      end
+    end
+  end
+
+  describe "#update_board_piece" do
+    context("when triggers") do
+      it("modify the board at correct position and with correct piece") do
+        test_board.update_board_piece(4, 4, dummy_piece_B1)
+        expect(test_board.board[4][4]).to equal(dummy_piece_B1)
+      end
+    end
+  end
+  
+
   # Template
-  describe "#" do
-    context("when ") do
-      it("") do
+  describe "#player_king_been_checked?" do
+    subject(:test_board) {
+      Board.new(
+        [
+          Array.new(4) { nil } + [dummy_piece_B1] + Array.new(3) { nil },
+          Array.new(8) { nil },
+          Array.new(8) { nil },
+          Array.new(8) { nil },
+          Array.new(8) { nil },
+          Array.new(8) { nil },
+          Array.new(8) { nil },
+          Array.new(4) { nil } + [dummy_piece_W1] + Array.new(3) { nil },
+        ]
+      )
+    }
+    before do
+      allow(test_board).to receive(:get_player_king_piece).and_return([0, 4, nil])
+    end
+
+    context("when player's king is checked") do
+      it("returns true") do
+        allow(test_board).to receive(:generate_opposite_attacking_loc).and_return([[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4]])
+        expect(test_board.player_king_been_checked?(player2, test_board)).to eql(true)
+      end
+    end
+
+    context("when player's king is not being checked") do
+      it("returns false") do
+        allow(test_board).to receive(:generate_opposite_attacking_loc).and_return([[4,4],[5,4],[6,4]])
+        expect(test_board.player_king_been_checked?(player2, test_board)).to eql(false)
       end
     end
   end

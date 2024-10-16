@@ -260,6 +260,8 @@ class Board
 
       player_pieces.each do |from_loc, piece|
         move_or_takeable_pos = find_reachable_pos(from_loc, piece.take_type, include_first_piece: true)
+        move_or_takeable_pos += find_reachable_pos(from_loc, piece.take_type, include_first_piece: false) # pawn
+        move_or_takeable_pos = Set.new(move_or_takeable_pos).to_a
         piece_move_res = []
         move_or_takeable_pos.each do |to_loc|
           copy_board = clone_board()
@@ -267,12 +269,7 @@ class Board
           piece_move_res.push(place_res)
         end
         moves_res += piece_move_res
-        # puts "from #{from_loc}"
-        # p piece_move_res
-        # p "###"
       end
-      # puts "#{player.name} 's moves_res:"
-      # p moves_res
       return [true, opposite_color] if moves_res.all? # .all? check if all el in array are truthy
     end
     return [false, nil]
