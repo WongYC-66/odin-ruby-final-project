@@ -3,15 +3,16 @@ require_relative "piece"
 class Board
   MIN_ROW, MAX_ROW = 0, 7
   MIN_COL, MAX_COL = 0, 7
+  attr_reader(:board)
 
   def initialize(board = nil)
     @board = board
-    new_board() if @board == nil
+    @board = new_board() if @board == nil
   end
 
   def new_board
     # B = Black, W = White
-    @board = [
+    [
       [Rook.new('B'), Knight.new('B'), Bishop.new('B'), Queen.new('B'), King.new('B'), Bishop.new('B'), Knight.new('B'), Rook.new('B')],
       Array.new(8) { Pawn.new('B')},
       Array.new(8) { nil },
@@ -55,6 +56,7 @@ class Board
   def place_piece(from, to, player)
     return false if whose_piece?(from[0], from[1]) != player.color
     return false if !valid_move?(from, to)
+    return false if own_king_been_checked?(from, to, player)
     # Replace and remove old
     r1, c1 = from
     r2, c2 = to
@@ -103,7 +105,7 @@ class Board
 
   def find_reachable_pos(from, type_arr, include_first_piece)
     reachable_pos = []
-    p type_arr
+    # p type_arr # to be commented
     type_arr.each do |type|
       reachable_pos += find_one_step_vertical_up_pos(from) if type == 'one-step-vertical-up'
       reachable_pos += find_two_step_vertical_up_pos(from) if type == 'two-step-vertical-up'
@@ -292,7 +294,7 @@ class Board
   end
 
   def castling(loc, player)
-    r, c = loc
+    r, c = loc[0]
     return false if whose_piece?(r, c) != player.color
 
     rook_piece = @board[r][c]
@@ -306,7 +308,17 @@ class Board
     return false if pieces_between_path.length != 2
 
     opposite_attacking_loc = generate_opposite_attacking_loc(player)
-    is_castling_path_under_attack = Set.new(opposite_attacking_loc).intersect?(Set.new(castling_path))
+    intersect_loc = Set.new(opposite_attacking_loc) & Set.new(castling_path)
+    is_castling_path_under_attack = intersect_loc.size > 0
+
+    # puts "# castling path"
+    # p Set.new(castling_path)
+
+    # puts "# opposite attacking loc"
+    # p Set.new(opposite_attacking_loc)
+
+    # puts "# intersect_loc :" 
+    # p Set.new(intersect_loc)
 
     if(is_castling_path_under_attack)
       return false
@@ -339,7 +351,8 @@ class Board
   def generate_path(r1, c1, r2, c2)
     return [] if r1 != r2
     res = []
-    for c in c1..c2
+    small_c, large_c = [c1, c2].minmax()
+    for c in small_c..large_c
       res.push([r1, c])
     end
     res
@@ -361,6 +374,40 @@ class Board
     end
 
     return danger_loc
+  end
+
+  def own_king_been_checked?(from, to, player)
+    # simulate board if after move, self-king under checked?
+    board_data = []
+    @board.each do |row|
+      new_row = []
+      row.each { |piece| new_row << piece}
+      board_data << new_row
+    end
+    copy_board = Board.new(board_data)
+    # Replace and remove old
+    r1, c1 = from
+    r2, c2 = to
+    source_piece = copy_board.board[r1][c1]
+    copy_board.update_board_piece(r2, c2, source_piece)
+    copy_board.update_board_piece(r1, c1, nil)
+
+    return player_king_been_checked?(player, copy_board)
+  end
+
+  def update_board_piece(r, c, piece)
+    @board[r][c] = piece
+  end
+
+  def player_king_been_checked?(player, board)
+    # own king
+    r_king, c_king, _ = board.get_player_king_piece(player)
+    king_loc = [[r_king, c_king]]
+
+    # find if intersect with king locations
+    opposite_attacking_loc = board.generate_opposite_attacking_loc(player)
+    intersect_loc = Set.new(opposite_attacking_loc) & Set.new(king_loc)
+    return intersect_loc.size > 0  # 0 = not under attk
   end
 
 end
