@@ -1,30 +1,10 @@
 ---
 :board: !ruby/object:Board
   board:
-  - - !ruby/object:Rook
-      color: B
-      moved: false
-      symbol: "♜"
-      type: Rook
-      move_type:
-      - Vertical
-      - Horizontal
-      take_type:
-      - Vertical
-      - Horizontal
-    - !ruby/object:Knight
-      color: B
-      moved: false
-      symbol: "♞"
-      type: Knight
-      move_type:
-      - knight
-      take_type:
-      - knight
-    - !ruby/object:Queen
-      color: B
+  - - !ruby/object:Queen
+      color: W
       moved: true
-      symbol: "♛"
+      symbol: "♕"
       type: Queen
       move_type:
       - Vertical
@@ -35,9 +15,20 @@
       - Horizontal
       - Diagonal
     -
+    - !ruby/object:Bishop
+      color: B
+      moved: true
+      symbol: "♝"
+      type: Bishop
+      move_type:
+      - Diagonal
+      take_type:
+      - Diagonal
+    -
+    -
     - !ruby/object:King
       color: B
-      moved: false
+      moved: true
       symbol: "♚"
       type: King
       move_type:
@@ -46,24 +37,7 @@
       take_type:
       - one-step-cross
       - one-step-diagonal
-    - !ruby/object:Bishop
-      color: B
-      moved: false
-      symbol: "♝"
-      type: Bishop
-      move_type:
-      - Diagonal
-      take_type:
-      - Diagonal
-    - !ruby/object:Knight
-      color: B
-      moved: false
-      symbol: "♞"
-      type: Knight
-      move_type:
-      - knight
-      take_type:
-      - knight
+    -
     - !ruby/object:Rook
       color: B
       moved: false
@@ -75,120 +49,87 @@
       take_type:
       - Vertical
       - Horizontal
+  - -
+    -
+    -
+    -
+    - !ruby/object:Pawn
+      color: B
+      moved: false
+      symbol: "♟"
+      type: Pawn
+      move_type:
+      - one-step-vertical-down
+      - two-step-vertical-down
+      take_type:
+      - one-step-diagonal-down
+      killable_pawn_by_en_passant:
+    - !ruby/object:Pawn
+      color: B
+      moved: false
+      symbol: "♟"
+      type: Pawn
+      move_type:
+      - one-step-vertical-down
+      - two-step-vertical-down
+      take_type:
+      - one-step-diagonal-down
+      killable_pawn_by_en_passant:
+    - !ruby/object:Bishop
+      color: B
+      moved: true
+      symbol: "♝"
+      type: Bishop
+      move_type:
+      - Diagonal
+      take_type:
+      - Diagonal
+    - !ruby/object:Pawn
+      color: B
+      moved: false
+      symbol: "♟"
+      type: Pawn
+      move_type:
+      - one-step-vertical-down
+      - two-step-vertical-down
+      take_type:
+      - one-step-diagonal-down
+      killable_pawn_by_en_passant:
+  - -
+    -
+    -
+    -
+    -
+    -
+    -
+    -
+  - -
+    -
+    - !ruby/object:Pawn
+      color: W
+      moved: true
+      symbol: "♙"
+      type: Pawn
+      move_type:
+      - one-step-vertical-up
+      take_type:
+      - one-step-diagonal-up
+      killable_pawn_by_en_passant:
+    -
+    -
+    -
+    -
+    - !ruby/object:Pawn
+      color: W
+      moved: true
+      symbol: "♙"
+      type: Pawn
+      move_type:
+      - one-step-vertical-up
+      take_type:
+      - one-step-diagonal-up
+      killable_pawn_by_en_passant:
   - - !ruby/object:Pawn
-      color: B
-      moved: false
-      symbol: "♟"
-      type: Pawn
-      move_type:
-      - one-step-vertical-down
-      - two-step-vertical-down
-      take_type:
-      - one-step-diagonal-down
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: W
-      moved: true
-      symbol: "♙"
-      type: Pawn
-      move_type:
-      - one-step-vertical-up
-      take_type:
-      - one-step-diagonal-up
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: B
-      moved: false
-      symbol: "♟"
-      type: Pawn
-      move_type:
-      - one-step-vertical-down
-      - two-step-vertical-down
-      take_type:
-      - one-step-diagonal-down
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: B
-      moved: false
-      symbol: "♟"
-      type: Pawn
-      move_type:
-      - one-step-vertical-down
-      - two-step-vertical-down
-      take_type:
-      - one-step-diagonal-down
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: B
-      moved: false
-      symbol: "♟"
-      type: Pawn
-      move_type:
-      - one-step-vertical-down
-      - two-step-vertical-down
-      take_type:
-      - one-step-diagonal-down
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: B
-      moved: false
-      symbol: "♟"
-      type: Pawn
-      move_type:
-      - one-step-vertical-down
-      - two-step-vertical-down
-      take_type:
-      - one-step-diagonal-down
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: B
-      moved: false
-      symbol: "♟"
-      type: Pawn
-      move_type:
-      - one-step-vertical-down
-      - two-step-vertical-down
-      take_type:
-      - one-step-diagonal-down
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: B
-      moved: false
-      symbol: "♟"
-      type: Pawn
-      move_type:
-      - one-step-vertical-down
-      - two-step-vertical-down
-      take_type:
-      - one-step-diagonal-down
-      killable_pawn_by_en_passant:
-  - -
-    -
-    -
-    -
-    -
-    -
-    -
-    -
-  - -
-    -
-    -
-    -
-    -
-    -
-    -
-    -
-  - -
-    -
-    -
-    -
-    -
-    -
-    -
-    -
-  - -
-    -
-    - !ruby/object:Pawn
       color: W
       moved: true
       symbol: "♙"
@@ -200,8 +141,60 @@
       killable_pawn_by_en_passant:
     -
     -
+    - !ruby/object:Knight
+      color: W
+      moved: true
+      symbol: "♘"
+      type: Knight
+      move_type:
+      - knight
+      take_type:
+      - knight
     -
     -
+    -
+    - !ruby/object:Pawn
+      color: W
+      moved: true
+      symbol: "♙"
+      type: Pawn
+      move_type:
+      - one-step-vertical-up
+      take_type:
+      - one-step-diagonal-up
+      killable_pawn_by_en_passant:
+  - - !ruby/object:Knight
+      color: W
+      moved: true
+      symbol: "♘"
+      type: Knight
+      move_type:
+      - knight
+      take_type:
+      - knight
+    -
+    -
+    -
+    -
+    - !ruby/object:Pawn
+      color: W
+      moved: true
+      symbol: "♙"
+      type: Pawn
+      move_type:
+      - one-step-vertical-up
+      take_type:
+      - one-step-diagonal-up
+      killable_pawn_by_en_passant:
+    - !ruby/object:Bishop
+      color: W
+      moved: true
+      symbol: "♗"
+      type: Bishop
+      move_type:
+      - Diagonal
+      take_type:
+      - Diagonal
     -
   - -
     - !ruby/object:Pawn
@@ -215,52 +208,40 @@
       take_type:
       - one-step-diagonal-up
       killable_pawn_by_en_passant:
+    - !ruby/object:Pawn
+      color: W
+      moved: false
+      symbol: "♙"
+      type: Pawn
+      move_type:
+      - one-step-vertical-up
+      - two-step-vertical-up
+      take_type:
+      - one-step-diagonal-up
+      killable_pawn_by_en_passant:
     -
+    - !ruby/object:Pawn
+      color: W
+      moved: false
+      symbol: "♙"
+      type: Pawn
+      move_type:
+      - one-step-vertical-up
+      - two-step-vertical-up
+      take_type:
+      - one-step-diagonal-up
+      killable_pawn_by_en_passant:
     -
-    - !ruby/object:Pawn
+    - !ruby/object:Bishop
       color: W
-      moved: false
-      symbol: "♙"
-      type: Pawn
+      moved: true
+      symbol: "♗"
+      type: Bishop
       move_type:
-      - one-step-vertical-up
-      - two-step-vertical-up
+      - Diagonal
       take_type:
-      - one-step-diagonal-up
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: W
-      moved: false
-      symbol: "♙"
-      type: Pawn
-      move_type:
-      - one-step-vertical-up
-      - two-step-vertical-up
-      take_type:
-      - one-step-diagonal-up
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: W
-      moved: false
-      symbol: "♙"
-      type: Pawn
-      move_type:
-      - one-step-vertical-up
-      - two-step-vertical-up
-      take_type:
-      - one-step-diagonal-up
-      killable_pawn_by_en_passant:
-    - !ruby/object:Pawn
-      color: W
-      moved: false
-      symbol: "♙"
-      type: Pawn
-      move_type:
-      - one-step-vertical-up
-      - two-step-vertical-up
-      take_type:
-      - one-step-diagonal-up
-      killable_pawn_by_en_passant:
+      - Diagonal
+    -
   - - !ruby/object:Rook
       color: W
       moved: false
@@ -272,37 +253,9 @@
       take_type:
       - Vertical
       - Horizontal
-    - !ruby/object:Knight
-      color: W
-      moved: false
-      symbol: "♘"
-      type: Knight
-      move_type:
-      - knight
-      take_type:
-      - knight
-    - !ruby/object:Bishop
-      color: W
-      moved: false
-      symbol: "♗"
-      type: Bishop
-      move_type:
-      - Diagonal
-      take_type:
-      - Diagonal
-    - !ruby/object:Queen
-      color: W
-      moved: false
-      symbol: "♕"
-      type: Queen
-      move_type:
-      - Vertical
-      - Horizontal
-      - Diagonal
-      take_type:
-      - Vertical
-      - Horizontal
-      - Diagonal
+    -
+    -
+    -
     - !ruby/object:King
       color: W
       moved: false
@@ -314,24 +267,8 @@
       take_type:
       - one-step-cross
       - one-step-diagonal
-    - !ruby/object:Bishop
-      color: W
-      moved: false
-      symbol: "♗"
-      type: Bishop
-      move_type:
-      - Diagonal
-      take_type:
-      - Diagonal
-    - !ruby/object:Knight
-      color: W
-      moved: false
-      symbol: "♘"
-      type: Knight
-      move_type:
-      - knight
-      take_type:
-      - knight
+    -
+    -
     - !ruby/object:Rook
       color: W
       moved: false
@@ -343,7 +280,7 @@
       take_type:
       - Vertical
       - Horizontal
-:turn: true
+:turn: false
 :player1: !ruby/object:Player
   name: Player_1
   color: W

@@ -56,7 +56,7 @@ class Board
   def place_piece(from, to, player)
     return false if whose_piece?(from[0], from[1]) != player.color
     return false if !valid_move?(from, to)
-    return false if own_king_been_checked?(from, to, player)
+    return false if own_king_checked_after_placed?(from, to, player)
     # Replace and remove old
     r1, c1 = from
     r2, c2 = to
@@ -74,6 +74,7 @@ class Board
 
   def valid_move?(from, to)
     return can_take?(from, to) || can_move?(from, to)
+    # return can_move?(from, to)
   end
 
   def can_take?(from, to)
@@ -120,7 +121,24 @@ class Board
       reachable_pos += find_horizontal_pos(from, include_first_piece) if type == 'Horizontal'
       reachable_pos += find_diagonal_pos(from, include_first_piece) if type == 'Diagonal'
     end
+    reachable_pos = exclude_pos_of_own_piece(reachable_pos, from)
     return reachable_pos
+  end
+
+  def exclude_pos_of_own_piece(pos, from)
+    r, c = from
+    player_color = @board[r][c].color
+    pos.filter do |loc|
+      p_r, p_c = loc
+      piece = @board[p_r][p_c]
+      if !piece
+        true    # keep empty pos
+      elsif piece.color == player_color
+        false   # discard pos with player'own piece
+      else
+        true    
+      end
+    end
   end
 
   def verify_options(options, from)
@@ -225,12 +243,39 @@ class Board
     verify_options_path(options, from, reachable_pos, include_first_piece)
   end
 
-  def game_over?
-    remain_kings = @board.flatten().filter do |piece|
-      piece.instance_of? King
+  def game_over?(player1, player2)
+    # remain_kings = @board.flatten().filter do |piece|
+    #   piece.instance_of? King
+    # end
+    # return [false, nil] if remain_kings.length != 1   # return false when more than 2 kings
+    # return [true, remain_kings[0].color]              # return true and color of remaining winning king
+    opposite_map = {
+      'W' => 'B',
+      'B' => 'W',
+    }
+    [player1, player2].each do |player|
+      opposite_color = opposite_map[player.color]
+      player_pieces = get_all_pieces_by_player(player)
+      moves_res = [] # true = checked, false = safe
+
+      player_pieces.each do |from_loc, piece|
+        move_or_takeable_pos = find_reachable_pos(from_loc, piece.take_type, include_first_piece: true)
+        piece_move_res = []
+        move_or_takeable_pos.each do |to_loc|
+          copy_board = clone_board()
+          place_res = copy_board.own_king_checked_after_placed?(from_loc, to_loc, player) # return false if invalid/king under checked
+          piece_move_res.push(place_res)
+        end
+        moves_res += piece_move_res
+        # puts "from #{from_loc}"
+        # p piece_move_res
+        # p "###"
+      end
+      # puts "#{player.name} 's moves_res:"
+      # p moves_res
+      return [true, opposite_color] if moves_res.all? # .all? check if all el in array are truthy
     end
-    return [false, nil] if remain_kings.length != 1   # return false when more than 2 kings
-    return [true, remain_kings[0].color]              # return true and color of remaining winning king
+    return [false, nil]
   end
 
   def check_pawn_move_rules(from, to)
@@ -252,7 +297,42 @@ class Board
     if piece.type == "Pawn"
       # 4. if double_stepped, then gives opposite pawn at 'left' and 'right' the ability to en-passant
       give_opposite_pawn_en_passant(piece, r2, c2) if (r2 - r1).abs == 2 # double-step
+
+      # 5. check if pawn can promote
+      check_if_promote(piece, r2, c2)
     end
+  end
+
+  def check_if_promote(piece, r, c)
+    if r == MIN_ROW || r == MAX_ROW
+      print_board()
+      puts "Wow, your pawn reached the last row, a promotion!"
+      color = piece.color
+      input = get_input_for_promote()
+      new_piece = nil
+      case input 
+        # 'queen, rook, knight, or bishop'
+        when 'queen'
+          new_piece = Queen.new(color)
+        when 'rook'
+          new_piece = Rook.new(color)
+        when 'knight'
+          new_piece = Knight.new(color)
+        when 'bishop'
+          new_piece = Bishop.new(color)
+      end
+      @board[r][c] = new_piece
+    end
+  end
+
+  def get_input_for_promote
+    input = nil
+    promote_regex = /(knight)|(queen)|(bishop)|(rook)/
+    until promote_regex.match?(input)
+      puts "Which you want pawn promote to ? queen/bishop/knight/rook"
+      input = gets.chomp!.downcase
+    end
+    return input
   end
 
   def give_opposite_pawn_en_passant(piece, r, c)
@@ -360,15 +440,9 @@ class Board
 
   def generate_opposite_attacking_loc(player)
     # find all pieces not owned by player
-    opposite_pieces = []
-    @board.each_with_index do |row, r|
-      row.each_with_index do |piece, c|
-        next if !piece
-        opposite_pieces.push([[r, c], piece]) if whose_piece?(r, c) != player.color
-      end
-    end
-
+    opposite_pieces = get_all_pieces_by_player(player, opposite: true)
     danger_loc = []   
+
     opposite_pieces.map do |loc, piece|
       danger_loc += find_reachable_pos(loc, piece.take_type, include_first_piece: true)
     end
@@ -376,15 +450,26 @@ class Board
     return danger_loc
   end
 
-  def own_king_been_checked?(from, to, player)
-    # simulate board if after move, self-king under checked?
-    board_data = []
-    @board.each do |row|
-      new_row = []
-      row.each { |piece| new_row << piece}
-      board_data << new_row
+  def get_all_pieces_by_player(player, opposite = false)
+    pieces = [] #[ [[r,c], piece], ...]
+    opposite_map = {
+      'B' => 'W',
+      'W' => 'B'
+    }
+    wanted_color = opposite ? opposite_map[player.color] : player.color
+
+    @board.each_with_index do |row, r|
+      row.each_with_index do |piece, c|
+        next if !piece
+        pieces.push([[r, c], piece]) if whose_piece?(r, c) == wanted_color
+      end
     end
-    copy_board = Board.new(board_data)
+    return pieces
+  end
+
+  def own_king_checked_after_placed?(from, to, player)
+    # simulate board if after move, self-king under checked?
+    copy_board = clone_board()
     # Replace and remove old
     r1, c1 = from
     r2, c2 = to
@@ -393,6 +478,16 @@ class Board
     copy_board.update_board_piece(r1, c1, nil)
 
     return player_king_been_checked?(player, copy_board)
+  end
+
+  def clone_board
+    board_data = []
+    @board.each do |row|
+      new_row = []
+      row.each { |piece| new_row << piece}
+      board_data << new_row
+    end
+    return Board.new(board_data)
   end
 
   def update_board_piece(r, c, piece)
@@ -409,5 +504,7 @@ class Board
     intersect_loc = Set.new(opposite_attacking_loc) & Set.new(king_loc)
     return intersect_loc.size > 0  # 0 = not under attk
   end
+
+  
 
 end

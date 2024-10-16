@@ -15,7 +15,7 @@ class Game
   end
 
   def play
-    until @board.game_over?[0]
+    until @board.game_over?(@player1, @player2)[0]
       @board.print_board()
       print_under_check_msg()
       user_input = get_user_input() # [[1,0], [2,0]] or "save" or "q" or "Q" or "castling"
@@ -135,7 +135,7 @@ class Game
   end
 
   def print_end_game_status
-    _, winner_color = @board.game_over?
+    _, winner_color = @board.game_over?(@player1, @player2)
     winning_player = winner_color == @player1.color ? @player1 : @player2
 
     puts "Game Ended"
