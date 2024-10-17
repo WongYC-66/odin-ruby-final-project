@@ -18,7 +18,7 @@ class Game
     until @board.game_over?(@player1, @player2)[0]
       @board.print_board()
       print_under_check_msg()
-      user_input = get_user_input() # [[1,0], [2,0]] or "save" or "q" or "Q" or "castling"
+      user_input = get_user_input() # ['a3', 'a2'] or "save" or "q" or "castling"
 
       # option 1. save game
       if user_input == "save"
@@ -28,6 +28,7 @@ class Game
       # option 2. quit game
       if user_input == "q"
         exit
+        return
       end
 
       # option 3. do king-rook castling
@@ -138,8 +139,8 @@ class Game
     _, winner_color = @board.game_over?(@player1, @player2)
     winning_player = winner_color == @player1.color ? @player1 : @player2
 
-    puts "Game Ended"
-    puts "Check Mate! #{winning_player.name} has won!"
+    puts "Game Ended".yellow
+    puts "Check Mate! #{winning_player.name} has won!".yellow
   end
 
   def print_under_check_msg

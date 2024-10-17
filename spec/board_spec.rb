@@ -251,13 +251,13 @@ describe Board do
     before do
       allow(dummy_piece_W1).to receive(:take_type)
       allow(dummy_piece_B1).to receive(:take_type)
+      allow(test_board).to receive(:get_all_pieces_by_player).and_return([[[0,0], dummy_piece_W1]], [[[0,7], dummy_piece_B1]])
+      allow(test_board).to receive(:find_reachable_pos).and_return([[0,0], [1,0], [2,0]])
+      allow(test_board).to receive(:clone_board).and_return(copied_board)
     end
     context("when player1 king is check-mated") do
       it("return [true, 'B']") do
         # mock P1 to lose
-        allow(test_board).to receive(:get_all_pieces_by_player).and_return([[[0,0], dummy_piece_W1]], [[[0,7], dummy_piece_B1]])
-        allow(test_board).to receive(:find_reachable_pos).and_return([[0,0], [1,0], [2,0]])
-        allow(test_board).to receive(:clone_board).and_return(copied_board)
         allow(copied_board).to receive(:own_king_checked_after_placed?).and_return(true, true, true)
         expect(test_board.game_over?(player1, player2)).to eql([true, 'B'])
       end
@@ -266,9 +266,6 @@ describe Board do
     context("when player2 king is check-mated") do
       it("return [true, 'A']") do
         # mock P2 to lose
-        allow(test_board).to receive(:get_all_pieces_by_player).and_return([[[0,0], dummy_piece_W1]], [[[0,7], dummy_piece_B1]])
-        allow(test_board).to receive(:find_reachable_pos).and_return([[0,0], [1,0], [2,0]])
-        allow(test_board).to receive(:clone_board).and_return(copied_board)
         allow(copied_board).to receive(:own_king_checked_after_placed?).and_return(false, false, false, true, true, true)
         expect(test_board.game_over?(player1, player2)).to eql([true, 'W'])
       end
@@ -277,9 +274,6 @@ describe Board do
     context("nobody is checkmate") do
       it("return [false, nil]") do
         # mock P2 to lose
-        allow(test_board).to receive(:get_all_pieces_by_player).and_return([[[0,0], dummy_piece_W1]], [[[0,7], dummy_piece_B1]])
-        allow(test_board).to receive(:find_reachable_pos).and_return([[0,0], [1,0], [2,0]])
-        allow(test_board).to receive(:clone_board).and_return(copied_board)
         allow(copied_board).to receive(:own_king_checked_after_placed?).and_return(false, true, false)
         expect(test_board.game_over?(player1, player2)).to eql([false, nil])
       end
