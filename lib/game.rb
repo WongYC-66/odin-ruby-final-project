@@ -7,18 +7,28 @@ class Game
 
   CHESS_LOC_REGEX = /^[a-hA-H][1-8]$/
 
-  def initialize(board = Board.new, turn = true, player1 = Player.new("Player_1", "W"), player2 = Player.new("Player_2", "B"))
+  def initialize(board:Board.new, turn:true, player1:Player.new("Player_1", "W"), player2:Player.new("Player_2", "B"), is_Ai: false)
     @board = board
     @turn = turn  # true = White(bottom side) starts first
     @player1 = player1 
     @player2 = player2
+    @is_opposite_Ai = is_Ai
+    if(is_Ai)
+      @player2 = Player.new("Player_2_Ai", "B")    # AI as Black, turn = false
+    end
   end
 
   def play
     until @board.game_over?(@player1, @player2)[0]
       @board.print_board()
       print_under_check_msg()
-      user_input = get_user_input() # ['a3', 'a2'] or "save" or "q" or "castling"
+
+      if @is_opposite_Ai && @turn == false # Ai's  turn
+        user_input = @board.get_ai_move(@player2)
+        user_input = translate_reverse(user_input)
+      else
+        user_input = get_user_input()  # ['a3', 'a2'] or "save" or "q" or "castling" 
+      end
 
       # option 1. save game
       if user_input == "save"
@@ -38,7 +48,7 @@ class Game
         castling_res = @board.castling(translate(rook_input), get_curr_player)
         if castling_res
           @turn = !@turn
-          puts "Success : Castling done."
+          puts "Success : Castling done with rook of#{rook_input}"
         else
           puts "Error : castling failed, either u've moved King/Rook, or the path is under attack..."
         end
@@ -49,6 +59,7 @@ class Game
       from, to = translate(user_input)
       place_res = @board.place_piece(from, to, get_curr_player())
 
+      puts "#{get_curr_player.name} : #{user_input[0]} => #{user_input[1]}"
       if place_res
         @turn = !@turn
       else
@@ -115,12 +126,23 @@ class Game
     end
   end
 
+  def translate_reverse(user_input)
+    # [[6,0], [5,0]] => ['A2' 'A3']
+    user_input.map do |loc|
+      n1, n2 = loc
+      c1 = (n2 + 'A'.ord).chr
+      c2 = (8 - n1)
+      [c1, c2].join('')
+    end
+  end
+
   def save_game
     yaml_string = YAML.dump({
       :board => @board,
       :turn => @turn,
       :player1 => @player1,
       :player2 => @player2,
+      :is_opposite_Ai => @is_opposite_Ai
     })
     File.write('./saved/save.yaml', yaml_string)
     puts "######### Game saved #########"
@@ -132,7 +154,7 @@ class Game
       "./saved/save.yaml",
       permitted_classes: [Symbol, Piece, Board, Rook, Knight, Bishop, Queen, King, Pawn, Player]
     )
-    self.new(data[:board], data[:turn], data[:player1], data[:player2])
+    self.new(board:data[:board], turn:data[:turn], player1:data[:player1], player2:data[:player2], is_Ai:data[:is_opposite_Ai])
   end
 
   def print_end_game_status

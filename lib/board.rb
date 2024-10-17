@@ -87,7 +87,7 @@ class Board
     return false if source_piece.color == target_piece.color # cant take own piece
     # from,to both not empty
     takeable_pos = find_reachable_pos(from, source_piece.take_type, include_first_piece: true)
-    p takeable_pos
+    # p takeable_pos
     return takeable_pos.include?(to)
   end
 
@@ -100,7 +100,7 @@ class Board
     return false if target_piece  # to_pos has a piece, can't move
     # from,to both not empty
     moveable_pos = find_reachable_pos(from, source_piece.move_type, include_first_piece: false)
-    p moveable_pos
+    # p moveable_pos
     return moveable_pos.include?(to)
   end
 
@@ -260,12 +260,12 @@ class Board
 
       player_pieces.each do |from_loc, piece|
         move_or_takeable_pos = find_reachable_pos(from_loc, piece.take_type, include_first_piece: true)
-        move_or_takeable_pos += find_reachable_pos(from_loc, piece.take_type, include_first_piece: false) # pawn
+        move_or_takeable_pos += find_reachable_pos(from_loc, piece.move_type, include_first_piece: false) # pawn
         move_or_takeable_pos = Set.new(move_or_takeable_pos).to_a
         piece_move_res = []
         move_or_takeable_pos.each do |to_loc|
           copy_board = clone_board()
-          place_res = copy_board.own_king_checked_after_placed?(from_loc, to_loc, player) # return false if invalid/king under checked
+          place_res = copy_board.own_king_checked_after_placed?(from_loc, to_loc, player) # return true if king under checked
           piece_move_res.push(place_res)
         end
         moves_res += piece_move_res
@@ -388,15 +388,6 @@ class Board
     intersect_loc = Set.new(opposite_attacking_loc) & Set.new(castling_path)
     is_castling_path_under_attack = intersect_loc.size > 0
 
-    # puts "# castling path"
-    # p Set.new(castling_path)
-
-    # puts "# opposite attacking loc"
-    # p Set.new(opposite_attacking_loc)
-
-    # puts "# intersect_loc :" 
-    # p Set.new(intersect_loc)
-
     if(is_castling_path_under_attack)
       return false
     else
@@ -502,6 +493,33 @@ class Board
     return intersect_loc.size > 0  # 0 = not under attk
   end
 
-  
+  def get_ai_move(ai_player)
+    player_pieces = get_all_pieces_by_player(ai_player)
+    possibles_moves = [] # [from, to]  like [ [[1,1],[1,2]], ... ]
+
+    player_pieces.each do |from_loc, piece|
+      move_or_takeable_pos = find_reachable_pos(from_loc, piece.take_type, include_first_piece: true)
+      move_or_takeable_pos += find_reachable_pos(from_loc, piece.move_type, include_first_piece: false) # pawn
+      move_or_takeable_pos = Set.new(move_or_takeable_pos).to_a
+      
+      move_or_takeable_pos.each do |to_loc|
+        copy_board = clone_board()
+        # special rule for pawn
+        if piece.type == "Pawn"
+          r1, c1 = from_loc
+          r2, c2 = to_loc
+          if c1 != c2 && @board[r2][c2] == nil  #  diagonal move to empty slot
+            next !piece.killable_pawn_by_en_passant # skip if can't apply en_passant 
+          end
+        end
+
+        place_res = copy_board.own_king_checked_after_placed?(from_loc, to_loc, ai_player) # return true if king under checked
+        # puts "#{from_loc} - #{to_loc} . #{place_res}"
+        next if place_res # skip this to_loc if king will be checked
+        possibles_moves.push([from_loc, to_loc])
+      end
+    end
+    return possibles_moves.sample
+  end
 
 end

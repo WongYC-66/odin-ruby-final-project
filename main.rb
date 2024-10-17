@@ -6,16 +6,20 @@ puts "Player 1's side is at bottom"
 puts "Player 2's side is at top"
 puts "Enter"
 puts "-- Y --  for new game"
+puts "-- AI --  for new game to vs AI(basic)"
 puts "-- N --  for saved game"
 
 user_input = gets.chomp.upcase
-until user_input == 'Y' || user_input == 'N'
+until user_input == 'Y' || user_input == 'N' || user_input == 'AI'
   puts "Invalid"
   user_input = gets.chomp.upcase
 end
 
 if user_input == 'Y'
   new_game = Game.new
+  new_game.play
+elsif user_input == 'AI'
+  new_game = Game.new(is_Ai: true)
   new_game.play
 else
   if File.exist?("./saved/save.yaml")

@@ -4,7 +4,7 @@ require_relative "../lib/player.rb"
 
 describe Game do
 
-  let(:test_game) { Game.new(board_instance, true, player1, player2) }
+  let(:test_game) { Game.new(board:board_instance, turn:true, player1:player1, player2:player2, is_Ai:false) }
   let(:board_instance) {instance_double(Board)}
   let(:player1) {instance_double(Player)}
   let(:player2) {instance_double(Player)}
@@ -209,7 +209,7 @@ describe Game do
   end
 
   describe("#translate") do
-    context("when user_input is ['A2, 'A3']") do
+    context("when user_input is ['A2', 'A3']") do
       it("returns [[6,0], [5,0]]") do
         expect(test_game.translate(['A2', 'A3'])).to eql([[6,0],[5,0]])
       end
@@ -220,6 +220,19 @@ describe Game do
       end
     end
   end
+
+  describe("#translate_reverse") do
+  context("when user_input is [[6,0], [5,0]]") do
+    it("returns ['A2', 'A3']") do
+      expect(test_game.translate_reverse([[6,0], [5,0]])).to eql(['A2', 'A3'])
+    end
+  end
+  context("when user_input is [[0,0], [7,7]]") do
+    it("returns ['A8', 'H1']") do
+      expect(test_game.translate_reverse([[0,0], [7,7]])).to eql(['A8', 'H1'])
+    end
+  end
+end
 
   describe("#save_game") do
     # no needa test standard lib

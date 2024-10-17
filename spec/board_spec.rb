@@ -250,7 +250,9 @@ describe Board do
     let(:copied_board) {}
     before do
       allow(dummy_piece_W1).to receive(:take_type)
+      allow(dummy_piece_W1).to receive(:move_type)
       allow(dummy_piece_B1).to receive(:take_type)
+      allow(dummy_piece_B1).to receive(:move_type)
       allow(test_board).to receive(:get_all_pieces_by_player).and_return([[[0,0], dummy_piece_W1]], [[[0,7], dummy_piece_B1]])
       allow(test_board).to receive(:find_reachable_pos).and_return([[0,0], [1,0], [2,0]])
       allow(test_board).to receive(:clone_board).and_return(copied_board)
